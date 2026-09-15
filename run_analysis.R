@@ -1,5 +1,5 @@
 # ==============================================================================
-# 2D 마커리스 제자리멀리뛰기 영상 분석 파이프라인 (H.264 완전 호환 인코딩)
+# 2D 마커리스 제자리멀리뛰기 영상 분석 파이프라인 (imageio-ffmpeg 내장 웹표준 H.264 인코더)
 # ==============================================================================
 
 library(reticulate)
@@ -8,14 +8,22 @@ library(tidyverse)
 # 1. 가상환경 연결
 use_virtualenv("C:/Users/chokm/jump_analysis/venv", required = TRUE)
 
-# 2. 파이썬 기반 비디오 분석 코어 엔진
+# 2. imageio 및 imageio-ffmpeg 자동 설치 (외부 FFmpeg 설치 없이 H.264 완전 지원)
+py_run_string("
+import sys
+import subprocess
+try:
+    import imageio
+except ImportError:
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'imageio', 'imageio-ffmpeg'])
+")
+
+# 3. 파이썬 기반 비디오 분석 코어 엔진 (imageio H.264 직접 렌더링)
 py_run_string("
 import cv2
 import numpy as np
 import pandas as pd
-import subprocess
-import shutil
-import os
+import imageio
 from ultralytics import YOLO
 
 def calc_angle_py(p1, p2, p3):
@@ -41,11 +49,16 @@ def process_jump_video_core(video_path, out_video_path, out_csv_path):
     fps    = cap.get(cv2.CAP_PROP_FPS)
     if fps <= 0 or np.isnan(fps):
         fps = 30.0
-        
-    # 1단계: 임시 비디오 생성 (mp4v로 빠르게 프레임 렌더링)
-    temp_video_path = out_video_path.replace('.mp4', '_temp.mp4')
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(temp_video_path, fourcc, fps, (width, height))
+
+    # 브라우저 100% 호환 H.264 (yuv420p) 라이터 생성
+    writer = imageio.get_writer(
+        out_video_path,
+        fps=fps,
+        codec='libx264',
+        pixelformat='yuv420p',
+        quality=8,
+        macro_block_size=None
+    )
     
     skeleton_pairs = [
         (5, 7), (7, 9), (6, 8), (8, 10), (5, 6),
@@ -127,34 +140,19 @@ def process_jump_video_core(video_path, out_video_path, out_csv_path):
         row.update(angles)
         records.append(row)
         
-        out.write(frame)
+        # OpenCV (BGR) -> imageio (RGB) 색상 변환 후 H.264 프레임 기록
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        writer.append_data(frame_rgb)
         frame_idx += 1
         
     cap.release()
-    out.release()
+    writer.close()
     
-    # 2단계: FFmpeg가 시스템에 있는 경우 웹 표준 H.264(libx264)로 100% 무결점 변환
-    ffmpeg_exe = shutil.which('ffmpeg')
-    if ffmpeg_exe:
-        cmd = [
-            ffmpeg_exe, '-y', '-i', temp_video_path,
-            '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
-            out_video_path
-        ]
-        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        if os.path.exists(temp_video_path):
-            os.remove(temp_video_path)
-    else:
-        # FFmpeg가 없으면 임시 파일을 최종 파일로 이름 변경
-        if os.path.exists(out_video_path):
-            os.remove(out_video_path)
-        os.rename(temp_video_path, out_video_path)
-        
     df_out = pd.DataFrame(records)
     df_out.to_csv(out_csv_path, index=False, encoding='utf-8-sig')
 ")
 
-# 3. R 래퍼 함수 정의
+# 4. R 래퍼 함수 정의
 analyze_jump_video <- function(video_file, output_video_file, output_csv_file) {
   dir.create(dirname(output_video_file), recursive = TRUE, showWarnings = FALSE)
   dir.create(dirname(output_csv_file),   recursive = TRUE, showWarnings = FALSE)
@@ -169,7 +167,7 @@ analyze_jump_video <- function(video_file, output_video_file, output_csv_file) {
   return(df_res)
 }
 
-# 4. 일괄 실행
+# 5. 일괄 실행
 setwd("C:/Users/chokm/jump_analysis")
 video_files <- list.files("raw_videos", pattern = "\\.mp4$", full.names = TRUE)
 
@@ -177,7 +175,7 @@ for (v_file in video_files) {
   f_name <- tools::file_path_sans_ext(basename(v_file))
   out_v <- file.path("output_videos", paste0(f_name, "_analyzed.mp4"))
   out_c <- file.path("output_data", paste0(f_name, "_kinematics.csv"))
-  message(">> H.264 웹표준 분석 인코딩 중: ", f_name)
+  message(">> [H.264 웹표준] 분석 인코딩 중: ", f_name)
   analyze_jump_video(v_file, out_v, out_c)
 }
-message(">> 전체 영상 분석 및 웹 호환 인코딩 완료!")
+message(">> 전체 영상 H.264 웹표준 분석 완료!")
