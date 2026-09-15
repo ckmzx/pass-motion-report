@@ -3,312 +3,336 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PASS - 제자리멀리뛰기 동작분석 리포트</title>
+  <title>PASS - 제자리멀리뛰기 동작분석 리포트 시스템</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+  <!-- 헤더 영역 -->
   <header class="header">
-    <div class="header-container">
-      <div class="logo-area">
-        <span class="logo-badge">PASS</span>
-        <span class="logo-sub">SPORTS SCIENCE LAB</span>
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-logo">PASS</span>
+        <span class="brand-sub">SPORTS SCIENCE LAB</span>
       </div>
-      <div class="report-title-area">
-        <h1>제자리멀리뛰기 동작분석 & 운동역학 해석 리포트</h1>
-        <p class="report-meta">패스체대입시 연수송도센터 · Markerless Motion Kinematics</p>
+      <div class="header-title">
+        <h1>제자리멀리뛰기 2D 동작분석 & 운동역학 코칭 리포트</h1>
+        <p>Markerless Motion Kinematics Evaluation System</p>
       </div>
     </div>
   </header>
 
-  <main class="container">
-    <!-- 1. 학생 및 측정 정보 카드 -->
-    <section class="card profile-card">
-      <div class="profile-grid">
-        <div class="profile-item">
-          <span class="label">이름</span>
-          <span class="val highlight" id="studentName">한예람</span>
+  <div class="app-container">
+    <!-- 1. 학생 기본 정보 입력 폼 -->
+    <section class="card profile-section">
+      <div class="section-title-bar">
+        <h2>📋 피검자 및 측정 정보</h2>
+        <span class="guide-text">분석 대상자의 정보를 입력하세요.</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="inputStudentName">피검자 성명</label>
+          <input type="text" id="inputStudentName" placeholder="예: 홍길동">
         </div>
-        <div class="profile-item">
-          <span class="label">소속 / 센터</span>
-          <span class="val">패스체대입시 연수송도센터</span>
+        <div class="form-group">
+          <label for="inputOrg">소속 / 지점</label>
+          <input type="text" id="inputOrg" placeholder="예: PASS 연수송도센터">
         </div>
-        <div class="profile-item">
-          <span class="label">종목</span>
-          <span class="val">제자리멀리뛰기 (Standing Long Jump)</span>
+        <div class="form-group">
+          <label for="inputDate">측정 일자</label>
+          <input type="date" id="inputDate">
         </div>
-        <div class="profile-item">
-          <span class="label">기록 (Distance)</span>
-          <span class="val score" id="jumpDistance">238 cm</span>
+        <div class="form-group">
+          <label for="inputScore">기록 (cm)</label>
+          <input type="number" id="inputScore" placeholder="예: 245">
         </div>
-        <div class="profile-item">
-          <span class="label">분석 방식</span>
-          <span class="val">2D Markerless Kinematics (YOLO Pose)</span>
+        <div class="form-group">
+          <label for="inputTargetScore">목표 기록 (cm)</label>
+          <input type="number" id="inputTargetScore" placeholder="예: 260">
         </div>
       </div>
     </section>
 
-    <!-- 2. 영상 업로드 및 비디오 플레이어 영역 -->
+    <!-- 2. 영상 업로드 및 비디오 컨트롤러 -->
     <section class="card video-section">
-      <div class="section-head">
-        <h2>1. 분석 영상 및 프레임 탐색기</h2>
-        <span class="section-desc">완료된 분석 영상(mp4)을 불러와 주요 이벤트 지점을 캡처하고 해석을 확인하세요.</span>
-      </div>
-      
-      <div class="upload-box" id="dropZone">
-        <input type="file" id="videoInput" accept="video/mp4,video/mov,video/*" style="display:none;">
-        <button class="btn btn-primary" onclick="document.getElementById('videoInput').click()">분석 완료 영상(MP4) 업로드</button>
-        <span class="upload-hint">또는 sample.mp4 영상을 드래그 앤 드롭하세요</span>
+      <div class="section-title-bar">
+        <h2>🎬 분석 영상 로드 & 프레임 탐색기</h2>
+        <span class="guide-text">분석 완료된 MP4 영상을 선택하면 0.01초 단위 정밀 제어 및 캡처가 가능합니다.</span>
       </div>
 
-      <div class="video-player-container" id="playerWrapper" style="display:none;">
-        <video id="jumpVideo" controls playsinline></video>
-        <div class="quick-nav-bar">
-          <span class="nav-label">구간 바로가기:</span>
-          <button class="btn-chip" onclick="seekToPhase(1)">① 정지 준비</button>
-          <button class="btn-chip" onclick="seekToPhase(2)">② 도약 준비 (최대 굴곡)</button>
-          <button class="btn-chip" onclick="seekToPhase(3)">③ 이륙 (Take-off)</button>
-          <button class="btn-chip" onclick="seekToPhase(4)">④ 체공 (Flight)</button>
-          <button class="btn-chip" onclick="seekToPhase(5)">⑤ 착지 (Landing)</button>
-          <button class="btn-chip capture-btn" onclick="captureCurrentFrame()">📸 현재 장면 캡처</button>
+      <!-- 업로드 영역 -->
+      <div class="drop-area" id="dropZone">
+        <input type="file" id="videoFileInput" accept="video/mp4,video/quicktime,video/*">
+        <div class="drop-message">
+          <span class="icon">📁</span>
+          <strong>분석 영상(MP4) 파일을 클릭하여 선택하거나 여기로 드래그하세요</strong>
+          <span class="sub" id="loadedFileName">선택된 파일 없음</span>
+        </div>
+      </div>
+
+      <!-- 비디오 재생기 -->
+      <div class="player-box" id="playerBox">
+        <div class="video-wrapper">
+          <video id="videoPlayer" playsinline preload="auto"></video>
+        </div>
+
+        <!-- 커스텀 탐색 컨트롤러 -->
+        <div class="video-controls">
+          <div class="timeline-row">
+            <span class="time-display" id="currentTimeLabel">0.00s</span>
+            <input type="range" id="timeSlider" min="0" max="100" value="0" step="0.001">
+            <span class="time-display" id="totalDurationLabel">0.00s</span>
+          </div>
+
+          <div class="btn-control-row">
+            <button class="btn btn-secondary" id="btnPlayPause">▶ 재생</button>
+            <button class="btn btn-step" id="btnPrevFrame">◀ -1 Frame (0.01s)</button>
+            <button class="btn btn-step" id="btnNextFrame">▶ +1 Frame (0.01s)</button>
+            <button class="btn btn-step" id="btnSlowMotion">⏱ 0.25배속</button>
+          </div>
+        </div>
+
+        <!-- 원클릭 국면 스냅샷 지정 바 -->
+        <div class="snapshot-bar">
+          <span class="snapshot-title">📸 현재 멈춘 장면을 아래 국면 사진으로 즉시 등록:</span>
+          <div class="snapshot-btn-group">
+            <button class="btn-snap" onclick="applySnapshotToPhase(1)">① 정지 준비</button>
+            <button class="btn-snap highlight-btn" onclick="applySnapshotToPhase(2)">② 최대 굴곡 (최대로 앉았을 때)</button>
+            <button class="btn-snap highlight-btn" onclick="applySnapshotToPhase(3)">③ 이륙 (Take-off)</button>
+            <button class="btn-snap" onclick="applySnapshotToPhase(4)">④ 체공 (Flight)</button>
+            <button class="btn-snap" onclick="applySnapshotToPhase(5)">⑤ 착지 (Landing)</button>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- 3. 핵심 5단계 국면별 사진 및 심층 역학 해석 (결과지 양식) -->
-    <section class="card phase-section">
-      <div class="section-head">
-        <h2>2. 국면별(Phase) 정밀 사진 & 운동역학 해석</h2>
-        <span class="section-desc">제자리멀리뛰기의 핵심 5대 국면에서 관절각, 무게중심, 코칭 포인트를 비교 분석합니다.</span>
+    <!-- 3. 핵심 5대 국면 정밀 결과지 양식 -->
+    <section class="card report-section">
+      <div class="section-title-bar">
+        <h2>📊 국면별(Phase) 운동역학 정밀 해석</h2>
+        <span class="guide-text">각 국면의 측정 각도를 입력하면 역학적 상태와 코칭 포인트가 자동으로 평가됩니다.</span>
       </div>
 
-      <div class="phase-cards-container">
+      <div class="phase-list">
         <!-- 국면 1: 준비자세 -->
-        <div class="phase-card" id="phase1">
-          <div class="phase-header">
-            <span class="phase-num">PHASE 01</span>
-            <h3>준비 자세 (Starting Posture)</h3>
-            <span class="phase-time" id="timeP1">0.00s</span>
+        <div class="phase-item" id="phaseCard1">
+          <div class="phase-top">
+            <span class="badge">PHASE 01</span>
+            <h3>정지 준비 자세 (Starting Posture)</h3>
+            <span class="time-tag" id="phaseTime1">시간 미설정</span>
           </div>
-          <div class="phase-body">
-            <div class="phase-img-box">
-              <img id="imgP1" src="assets/p1_standing.jpg" alt="준비 자세" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22225%22><rect width=%22100%%22 height=%22100%%22 fill=%22%2324292e%22/><text x=%2250%%22 y=%2250%%22 fill=%22%23aaa%22 font-family=%22sans-serif%22 font-size=%2216%22 text-anchor=%22middle%22>준비자세 스냅샷</text></svg>'">
-              <button class="btn-replace" onclick="replacePhaseImage(1)">이 사진으로 교체</button>
+          <div class="phase-grid">
+            <div class="img-container">
+              <div class="empty-img-placeholder" id="imgPlaceholder1">
+                <span>영상을 멈추고<br><strong>[① 정지 준비]</strong> 버튼을 누르면<br>스냅샷이 등록됩니다</span>
+              </div>
+              <img id="phaseImg1" class="phase-img" style="display:none;" alt="준비자세">
             </div>
-            <div class="phase-metrics">
-              <div class="metric-row">
-                <span class="m-label">무릎 각도 (Knee)</span>
-                <span class="m-val" id="angP1Knee">172.5°</span>
-                <span class="m-status normal">적정 (신전)</span>
+            <div class="inputs-container">
+              <div class="input-row">
+                <label>무릎 신전 각도 (°)</label>
+                <input type="number" step="0.1" id="valKnee1" placeholder="예: 172.0" oninput="evaluatePhase1()">
+                <span class="status-pill" id="statusKnee1">-</span>
               </div>
-              <div class="metric-row">
-                <span class="m-label">고관절 각도 (Hip)</span>
-                <span class="m-val" id="angP1Hip">168.0°</span>
-                <span class="m-status normal">안정</span>
+              <div class="input-row">
+                <label>고관절 각도 (°)</label>
+                <input type="number" step="0.1" id="valHip1" placeholder="예: 168.0">
               </div>
-              <div class="metric-row">
-                <span class="m-label">팔 위치 (Arm)</span>
-                <span class="m-val">후방 예비 스윙</span>
-                <span class="m-status good">우수</span>
+              <div class="input-row">
+                <label>팔 예비동작 평가</label>
+                <select id="valArm1" onchange="evaluatePhase1()">
+                  <option value="good">충분한 후방 백스윙 확보 (우수)</option>
+                  <option value="normal">보통 수준의 백스윙</option>
+                  <option value="bad">백스윙 궤적 부족 (개선 필요)</option>
+                </select>
               </div>
             </div>
-            <div class="phase-analysis">
+            <div class="feedback-container">
               <h4>🔍 역학적 해석 & 피드백</h4>
-              <p>출발선 정렬 시 <strong>기저면(Base of Support)</strong>이 양발 어깨너비로 견고하게 유지되었으며, 팔의 후방 백스윙 궤적이 충분히 확보되어 전방 추진을 위한 가속 거리가 잘 형성되었습니다.</p>
+              <p id="feedbackText1">출발선에서 기저면(BOS)을 어깨너비로 안정되게 확보하고, 팔을 후방으로 충분히 들어 올려 전방 스윙 추진 거리를 확보해야 합니다.</p>
             </div>
           </div>
         </div>
 
         <!-- 국면 2: 최대 굴곡 (최대로 앉았을 때) -->
-        <div class="phase-card highlight-card" id="phase2">
-          <div class="phase-header">
-            <span class="phase-num highlight-badge">PHASE 02</span>
+        <div class="phase-item highlight-item" id="phaseCard2">
+          <div class="phase-top">
+            <span class="badge accent-badge">PHASE 02</span>
             <h3>최대 굴곡 국면 (Maximum Flexion / 최대로 앉았을 때)</h3>
-            <span class="phase-time" id="timeP2">0.58s</span>
+            <span class="time-tag" id="phaseTime2">시간 미설정</span>
           </div>
-          <div class="phase-body">
-            <div class="phase-img-box">
-              <img id="imgP2" src="assets/p2_max_flexion.jpg" alt="최대 굴곡" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22225%22><rect width=%22100%%22 height=%22100%%22 fill=%22%2324292e%22/><text x=%2250%%22 y=%2250%%22 fill=%22%2300ff88%22 font-family=%22sans-serif%22 font-size=%2216%22 text-anchor=%22middle%22>최대 굴곡 스냅샷</text></svg>'">
-              <button class="btn-replace" onclick="replacePhaseImage(2)">이 사진으로 교체</button>
+          <div class="phase-grid">
+            <div class="img-container">
+              <div class="empty-img-placeholder" id="imgPlaceholder2">
+                <span>영상을 멈추고<br><strong>[② 최대 굴곡]</strong> 버튼을 누르면<br>스냅샷이 등록됩니다</span>
+              </div>
+              <img id="phaseImg2" class="phase-img" style="display:none;" alt="최대 굴곡">
             </div>
-            <div class="phase-metrics">
-              <div class="metric-row">
-                <span class="m-label">무릎 최소 각도 (Min Knee)</span>
-                <span class="m-val score-highlight" id="angP2Knee">77.3°</span>
-                <span class="m-status best">이상적 (75°~85°)</span>
+            <div class="inputs-container">
+              <div class="input-row">
+                <label><strong>무릎 최소 각도 (Min Knee °)</strong></label>
+                <input type="number" step="0.1" id="valKnee2" placeholder="예: 78.5" oninput="evaluatePhase2()">
+                <span class="status-pill" id="statusKnee2">-</span>
               </div>
-              <div class="metric-row">
-                <span class="m-label">고관절 각도 (Hip)</span>
-                <span class="m-val" id="angP2Hip">72.4°</span>
-                <span class="m-status good">깊은 힌지</span>
+              <div class="input-row">
+                <label>고관절 굴곡 각도 (Hip °)</label>
+                <input type="number" step="0.1" id="valHip2" placeholder="예: 74.0" oninput="evaluatePhase2()">
+                <span class="status-pill" id="statusHip2">-</span>
               </div>
-              <div class="metric-row">
-                <span class="m-label">상체 전경각 (Trunk Lean)</span>
-                <span class="m-val">42.0°</span>
-                <span class="m-status best">전방 추진 최적</span>
+              <div class="input-row">
+                <label>상체 전경각 (Trunk °)</label>
+                <input type="number" step="0.1" id="valTrunk2" placeholder="예: 42.0">
               </div>
             </div>
-            <div class="phase-analysis">
+            <div class="feedback-container">
               <h4>🔍 역학적 해석 & 피드백</h4>
-              <p>대퇴사두근과 둔근의 <strong>신장-단축 주기(Stretch-Shortening Cycle, SSC)</strong>를 극대화할 수 있는 77.3°의 깊고 탄력 있는 굴곡을 형성했습니다. 무릎이 발끝보다 과도하게 앞으로 나가지 않고 힙힌지가 깊게 걸려 지면반력(GRF)의 수평 분력을 극대화할 준비가 되었습니다.</p>
+              <p id="feedbackText2">무릎 각도를 입력하면 대퇴사두근/둔근의 <strong>신장-단축 주기(SSC)</strong> 탄성에너지 축적 효율과 힙힌지 밸런스가 자동 계산됩니다.</p>
             </div>
           </div>
         </div>
 
         <!-- 국면 3: 이륙 (Take-off) -->
-        <div class="phase-card highlight-card" id="phase3">
-          <div class="phase-header">
-            <span class="phase-num highlight-badge">PHASE 03</span>
+        <div class="phase-item highlight-item" id="phaseCard3">
+          <div class="phase-top">
+            <span class="badge accent-badge">PHASE 03</span>
             <h3>이륙 국면 (Take-off / 발이 떨어지는 순간)</h3>
-            <span class="phase-time" id="timeP3">0.92s</span>
+            <span class="time-tag" id="phaseTime3">시간 미설정</span>
           </div>
-          <div class="phase-body">
-            <div class="phase-img-box">
-              <img id="imgP3" src="assets/p3_takeoff.jpg" alt="이륙" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22225%22><rect width=%22100%%22 height=%22100%%22 fill=%22%2324292e%22/><text x=%2250%%22 y=%2250%%22 fill=%22%2300ff88%22 font-family=%22sans-serif%22 font-size=%2216%22 text-anchor=%22middle%22>이륙 스냅샷</text></svg>'">
-              <button class="btn-replace" onclick="replacePhaseImage(3)">이 사진으로 교체</button>
+          <div class="phase-grid">
+            <div class="img-container">
+              <div class="empty-img-placeholder" id="imgPlaceholder3">
+                <span>영상을 멈추고<br><strong>[③ 이륙]</strong> 버튼을 누르면<br>스냅샷이 등록됩니다</span>
+              </div>
+              <img id="phaseImg3" class="phase-img" style="display:none;" alt="이륙">
             </div>
-            <div class="phase-metrics">
-              <div class="metric-row">
-                <span class="m-label">이륙 무릎 각도 (Knee)</span>
-                <span class="m-val score-highlight" id="angP3Knee">165.2°</span>
-                <span class="m-status best">완전 신전(Triple Ext.)</span>
+            <div class="inputs-container">
+              <div class="input-row">
+                <label><strong>이륙 무릎 각도 (Knee Ext °)</strong></label>
+                <input type="number" step="0.1" id="valKnee3" placeholder="예: 165.0" oninput="evaluatePhase3()">
+                <span class="status-pill" id="statusKnee3">-</span>
               </div>
-              <div class="metric-row">
-                <span class="m-label">이륙 고관절 각도 (Hip)</span>
-                <span class="m-val" id="angP3Hip">162.8°</span>
-                <span class="m-status good">우수</span>
+              <div class="input-row">
+                <label>이륙 고관절 각도 (Hip Ext °)</label>
+                <input type="number" step="0.1" id="valHip3" placeholder="예: 162.0">
               </div>
-              <div class="metric-row">
-                <span class="m-label">추정 도약 투사각</span>
-                <span class="m-val" id="angP3Launch">43.5°</span>
-                <span class="m-status best">황금각 (40°~45°)</span>
+              <div class="input-row">
+                <label>도약 투사각 (Launch Angle °)</label>
+                <input type="number" step="0.1" id="valLaunch3" placeholder="예: 43.0" oninput="evaluatePhase3()">
+                <span class="status-pill" id="statusLaunch3">-</span>
               </div>
             </div>
-            <div class="phase-analysis">
+            <div class="feedback-container">
               <h4>🔍 역학적 해석 & 피드백</h4>
-              <p>발목·무릎·고관절이 동시에 폭발적으로 펴지는 <strong>트리플 익스텐션(Triple Extension)</strong>이 완벽하게 이루어졌습니다. 도약 투사각이 43.5°로 형성되어 체공 높이와 전방 도약 거리의 최적 균형을 달성했습니다.</p>
+              <p id="feedbackText3">이륙 시 발목·무릎·고관절이 동시에 펴지는 <strong>트리플 익스텐션(Triple Extension)</strong> 완결도와 황금 투사각(40°~45°) 달성 여부를 분석합니다.</p>
             </div>
           </div>
         </div>
 
-        <!-- 국면 4: 체공 및 무릎 끌어올리기 (Flight) -->
-        <div class="phase-card" id="phase4">
-          <div class="phase-header">
-            <span class="phase-num">PHASE 04</span>
-            <h3>체공 & 당기기 국면 (Flight & Tuck)</h3>
-            <span class="phase-time" id="timeP4">1.25s</span>
+        <!-- 국면 4: 체공 (Flight & Tuck) -->
+        <div class="phase-item" id="phaseCard4">
+          <div class="phase-top">
+            <span class="badge">PHASE 04</span>
+            <h3>체공 & 무릎 당기기 국면 (Flight & Tuck)</h3>
+            <span class="time-tag" id="phaseTime4">시간 미설정</span>
           </div>
-          <div class="phase-body">
-            <div class="phase-img-box">
-              <img id="imgP4" src="assets/p4_flight.jpg" alt="체공" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22225%22><rect width=%22100%%22 height=%22100%%22 fill=%22%2324292e%22/><text x=%2250%%22 y=%2250%%22 fill=%22%23aaa%22 font-family=%22sans-serif%22 font-size=%2216%22 text-anchor=%22middle%22>체공 스냅샷</text></svg>'">
-              <button class="btn-replace" onclick="replacePhaseImage(4)">이 사진으로 교체</button>
+          <div class="phase-grid">
+            <div class="img-container">
+              <div class="empty-img-placeholder" id="imgPlaceholder4">
+                <span>영상을 멈추고<br><strong>[④ 체공]</strong> 버튼을 누르면<br>스냅샷이 등록됩니다</span>
+              </div>
+              <img id="phaseImg4" class="phase-img" style="display:none;" alt="체공">
             </div>
-            <div class="phase-metrics">
-              <div class="metric-row">
-                <span class="m-label">무릎 굴곡 각도 (Tuck)</span>
-                <span class="m-val" id="angP4Knee">68.4°</span>
-                <span class="m-status good">우수한 당기기</span>
+            <div class="inputs-container">
+              <div class="input-row">
+                <label>공중 무릎 굴곡 각도 (Tuck °)</label>
+                <input type="number" step="0.1" id="valKnee4" placeholder="예: 68.0" oninput="evaluatePhase4()">
+                <span class="status-pill" id="statusKnee4">-</span>
               </div>
-              <div class="metric-row">
-                <span class="m-label">상체 숙임각 (Trunk Angle)</span>
-                <span class="m-val">38.0°</span>
-                <span class="m-status good">안정적 공중자세</span>
-              </div>
-              <div class="metric-row">
-                <span class="m-label">체공 시간 (Flight Time)</span>
-                <span class="m-val">0.48s</span>
-                <span class="m-status best">높은 체공력</span>
+              <div class="input-row">
+                <label>체공 시간 (Flight Time 초)</label>
+                <input type="number" step="0.01" id="valFlightTime4" placeholder="예: 0.48">
               </div>
             </div>
-            <div class="phase-analysis">
+            <div class="feedback-container">
               <h4>🔍 역학적 해석 & 피드백</h4>
-              <p>정점 도달 후 복직근과 장요근을 이용해 <strong>무릎을 가슴 쪽으로 끌어올리는 턱(Tuck) 동작</strong>이 매우 빠르고 높게 형성되어, 착지 시 다리를 앞으로 최대한 뻗을 수 있는 유효 시간을 확보했습니다.</p>
+              <p id="feedbackText4">정점 도달 후 무릎을 가슴으로 빠르게 끌어당기는 턱(Tuck) 동작이 높을수록 착지 시 하지를 전방으로 멀리 뻗을 수 있는 유효 시간이 확보됩니다.</p>
             </div>
           </div>
         </div>
 
         <!-- 국면 5: 착지 (Landing) -->
-        <div class="phase-card" id="phase5">
-          <div class="phase-header">
-            <span class="phase-num">PHASE 05</span>
+        <div class="phase-item" id="phaseCard5">
+          <div class="phase-top">
+            <span class="badge">PHASE 05</span>
             <h3>착지 & 완충 국면 (Landing & Cushioning)</h3>
-            <span class="phase-time" id="timeP5">1.50s</span>
+            <span class="time-tag" id="phaseTime5">시간 미설정</span>
           </div>
-          <div class="phase-body">
-            <div class="phase-img-box">
-              <img id="imgP5" src="assets/p5_landing.jpg" alt="착지" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22225%22><rect width=%22100%%22 height=%22100%%22 fill=%22%2324292e%22/><text x=%2250%%22 y=%2250%%22 fill=%22%23aaa%22 font-family=%22sans-serif%22 font-size=%2216%22 text-anchor=%22middle%22>착지 스냅샷</text></svg>'">
-              <button class="btn-replace" onclick="replacePhaseImage(5)">이 사진으로 교체</button>
+          <div class="phase-grid">
+            <div class="img-container">
+              <div class="empty-img-placeholder" id="imgPlaceholder5">
+                <span>영상을 멈추고<br><strong>[⑤ 착지]</strong> 버튼을 누르면<br>스냅샷이 등록됩니다</span>
+              </div>
+              <img id="phaseImg5" class="phase-img" style="display:none;" alt="착지">
             </div>
-            <div class="phase-metrics">
-              <div class="metric-row">
-                <span class="m-label">접촉 무릎 각도 (Touchdown)</span>
-                <span class="m-val" id="angP5Knee">142.0°</span>
-                <span class="m-status good">전방 뻗기 양호</span>
+            <div class="inputs-container">
+              <div class="input-row">
+                <label>접지 순간 무릎 각도 (°)</label>
+                <input type="number" step="0.1" id="valKnee5" placeholder="예: 140.0" oninput="evaluatePhase5()">
+                <span class="status-pill" id="statusKnee5">-</span>
               </div>
-              <div class="metric-row">
-                <span class="m-label">착지 후 완충각 (Cushion)</span>
-                <span class="m-val">88.5°</span>
-                <span class="m-status best">안정적 충격 흡수</span>
-              </div>
-              <div class="metric-row">
-                <span class="m-label">착지 안정성 (Stability)</span>
-                <span class="m-val">후방 낙하 없음</span>
-                <span class="m-status best">퍼펙트</span>
+              <div class="input-row">
+                <label>착지 안정성</label>
+                <select id="valStability5" onchange="evaluatePhase5()">
+                  <option value="perfect">전방으로 완벽히 중심 이동 (감점 없음)</option>
+                  <option value="warning">착지 후 중심 흔들림 (경미한 손실)</option>
+                  <option value="fall">후방 낙하 / 엉덩방아 (파울 또는 큰 손실)</option>
+                </select>
               </div>
             </div>
-            <div class="phase-analysis">
+            <div class="feedback-container">
               <h4>🔍 역학적 해석 & 피드백</h4>
-              <p>발뒤꿈치 접지 직후 골반의 전방 이동이 매끄럽게 이어져 뒤로 넘어지지 않고 <strong>전방으로 무게중심(COM)</strong>을 온전히 넘겼습니다. 지면 충격 완충 시 무릎과 고관절의 협응 굴곡이 매우 훌륭합니다.</p>
+              <p id="feedbackText5">발뒤꿈치 접지 후 무게중심(COM)이 지면반력을 뚫고 전방으로 매끄럽게 넘어가는지 여부를 평가합니다.</p>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 4. 운동역학 종합 총평 및 코칭 처방 -->
+    <!-- 4. PASS 종합 코칭 처방 및 총평 -->
     <section class="card summary-section">
-      <div class="section-head">
-        <h2>3. PASS 종합 코칭 처방 & 트레이닝 가이드</h2>
+      <div class="section-title-bar">
+        <h2>🎯 PASS 맞춤형 코칭 처방 & 트레이닝 가이드</h2>
+        <span class="guide-text">분석된 역학 데이터를 기반으로 맞춤형 피드백을 작성하세요.</span>
       </div>
-      
+
       <div class="summary-grid">
         <div class="summary-box strength-box">
-          <h3>💪 강점 (Strengths)</h3>
-          <ul>
-            <li><strong>강력한 신장-단축 주기(SSC)</strong>: 도약 전 77.3°의 충분한 굴곡으로 탄성에너지를 효과적으로 저장함.</li>
-            <li><strong>이상적인 도약 투사각(43.5°)</strong>: 수평 추진력과 체공 높이의 밸런스가 뛰어나 238cm 고득점 달성.</li>
-            <li><strong>우수한 착지 무게중심 전환</strong>: 착지 후 상체가 전방으로 유연하게 넘어가 감점 요인 없음.</li>
-          </ul>
+          <h3>💪 주요 강점 (Strengths)</h3>
+          <textarea id="textStrengths" rows="4" placeholder="학생의 우수한 역학적 요인을 적어주세요. (예: 깊은 힙힌지와 강한 이륙 신전력으로 지면반력 활용 우수)"></textarea>
         </div>
-        <div class="summary-box improvement-box">
-          <h3>🎯 추가 기록 향상 포인트 (Improvements)</h3>
-          <ul>
-            <li><strong>체공 중 발 뻗기 타이밍</strong>: 무릎을 당긴 후 발끝을 전방으로 뻗는 타이밍을 0.05초만 더 유지하면 <strong>+3~5cm 추가 향상 가능</strong>.</li>
-            <li><strong>팔 스윙 동기화</strong>: 이륙 직전 팔이 귀 옆을 통과하는 순간의 가속도를 지면 이탈 순간과 더 일치시킬 것.</li>
-          </ul>
+        <div class="summary-box improve-box">
+          <h3>🎯 기록 향상 보완점 (Improvements)</h3>
+          <textarea id="textImprovements" rows="4" placeholder="기록 향상을 위한 핵심 개선 포인트를 적어주세요. (예: 공중에서 발끝을 앞으로 뻗는 타이밍을 0.05초 더 유지할 것)"></textarea>
         </div>
       </div>
-      
-      <div class="action-plan">
-        <h4>🏋️ 맞춤형 보강 운동 처방</h4>
-        <div class="plan-chips">
-          <span class="plan-chip">박스 점프 & 턱점프 (Box Jump to Tuck Jump)</span>
-          <span class="plan-chip">밴드 저항 힙힌지 드라이브</span>
-          <span class="plan-chip">행잉 레그레이즈 (착지 전방 뻗기 복근 강화)</span>
+
+      <div class="action-box">
+        <h4>🏋️ 추천 보강 트레이닝 처방</h4>
+        <div class="tag-input-area">
+          <input type="text" id="inputTrainingPlan" placeholder="예: 박스 점프 투 턱점프, 밴드 힙힌지 드라이브, 행잉 레그레이즈">
         </div>
       </div>
     </section>
 
-    <!-- 5. 인쇄 및 리포트 내보내기 -->
-    <div class="footer-actions">
-      <button class="btn btn-secondary" onclick="window.print()">🖨️ 리포트 PDF 출력 / 인쇄</button>
-      <button class="btn btn-primary" onclick="exportReportData()">💾 리포트 데이터 저장</button>
+    <!-- 5. 액션 바 -->
+    <div class="action-footer">
+      <button class="btn btn-secondary" onclick="window.print()">🖨️ 리포트 PDF 출력 / A4 인쇄</button>
+      <button class="btn btn-primary" onclick="exportDataJSON()">💾 리포트 데이터 저장</button>
     </div>
-  </main>
+  </div>
 
   <footer class="footer">
-    <p>© 2026 PASS SPORTS SCIENCE LAB. All Rights Reserved. · 연수송도센터</p>
+    <p>© PASS SPORTS SCIENCE LAB. All Rights Reserved.</p>
   </footer>
 
   <script src="app.js"></script>
