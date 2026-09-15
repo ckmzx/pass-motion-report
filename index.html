@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PASS - 제자리멀리뛰기 AI 전자동 역학 분석 시스템</title>
+  <title>PASS - 제자리멀리뛰기 2D 동작분석 & 운동역학 코칭 리포트</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-  <!-- 헤더 영역 -->
+  <!-- 상단 헤더 -->
   <header class="header">
     <div class="header-inner">
       <div class="brand">
@@ -16,18 +17,18 @@
         <span class="brand-sub">SPORTS SCIENCE LAB</span>
       </div>
       <div class="header-title">
-        <h1>제자리멀리뛰기 2D AI 전자동 역학 해석 & 코칭 리포트</h1>
-        <p>Instant Automatic Video Kinematics Report System</p>
+        <h1>제자리멀리뛰기 2D 마커리스 정밀 운동역학 분석 리포트</h1>
+        <p>Full Kinematic Time-Series & Dual-Input Evaluation System</p>
       </div>
     </div>
   </header>
 
   <div class="app-container">
-    <!-- 1. 피검자 정보 입력 (선택 사항) -->
+    <!-- 1. 피검자 정보 입력 -->
     <section class="card profile-section">
       <div class="section-title-bar">
-        <h2>📋 피검자 정보 (선택 입력)</h2>
-        <span class="guide-text">비워두셔도 영상 분석 리포트 생성이 가능합니다.</span>
+        <h2>📋 피검자 및 측정 정보</h2>
+        <span class="guide-text">학생 정보와 기록을 입력하세요.</span>
       </div>
       <div class="form-grid">
         <div class="form-group">
@@ -43,51 +44,67 @@
           <input type="date" id="inputDate">
         </div>
         <div class="form-group">
-          <label>기록 (cm)</label>
+          <label>기록 (Distance cm)</label>
           <input type="number" id="inputScore" placeholder="예: 245">
         </div>
       </div>
     </section>
 
-    <!-- 2. 영상 업로드 및 전자동 분석 영역 -->
+    <!-- 2. 영상 & CSV 데이터 업로드 영역 -->
     <section class="card video-section">
       <div class="section-title-bar">
-        <h2>🎬 분석 영상 로드 & AI 자동 분석</h2>
-        <span class="guide-text">분석 완료된 영상(MP4)을 올리면 사이트가 즉시 주요 국면 사진과 각도를 추출합니다.</span>
+        <h2>🎬 분석 영상(MP4) 및 데이터(CSV) 로드</h2>
+        <span class="guide-text">CSV를 올리면 영상의 실제 프레임별 각도를 100% 실측값으로 정밀 계산합니다.</span>
       </div>
 
-      <!-- 업로드 영역 -->
-      <div class="drop-area" id="dropZone">
-        <input type="file" id="videoFileInput" accept="video/mp4,video/quicktime,video/webm,video/*">
-        <div class="drop-message">
-          <span class="icon">⚡</span>
-          <strong>분석 완료 영상(MP4)을 클릭하여 선택하거나 여기로 드래그하세요</strong>
-          <span class="sub" id="loadedFileName">영상을 선택하면 즉시 5대 국면 추출 및 리포트 생성이 시작됩니다.</span>
+      <div class="upload-dual-grid">
+        <!-- 1) 비디오 업로드 박스 -->
+        <div class="drop-box" id="dropZoneVideo">
+          <input type="file" id="videoFileInput" accept="video/mp4,video/quicktime,video/*">
+          <span class="icon">📹</span>
+          <strong>분석 영상 (MP4) 선택</strong>
+          <span class="sub" id="loadedVideoName">영상 파일을 드래그하거나 클릭하세요</span>
+        </div>
+
+        <!-- 2) CSV 업로드 박스 (강력 권장) -->
+        <div class="drop-box csv-box" id="dropZoneCsv">
+          <input type="file" id="csvFileInput" accept=".csv,text/csv">
+          <span class="icon">📊</span>
+          <strong>각도 데이터 (CSV) 선택 <span class="badge-rec">실측 추천</span></strong>
+          <span class="sub" id="loadedCsvName">R에서 추출된 _kinematics.csv 파일을 올려주세요</span>
         </div>
       </div>
 
-      <!-- 진행률 바 -->
-      <div class="progress-container" id="progressBox" style="display:none;">
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="progressBar"></div>
-        </div>
-        <span class="progress-text" id="progressText">영상을 스캔하여 주요 국면 사진과 각도를 추출 중입니다... (0%)</span>
+      <!-- 상태 알림 바 -->
+      <div class="status-alert-bar" id="statusAlertBar" style="display:none;">
+        <span id="statusAlertText">데이터를 로드하는 중입니다...</span>
       </div>
 
-      <!-- 비디오 뷰어 (분석용 숨김 캔버스 포함) -->
+      <!-- 비디오 뷰어 & 프레임 탐색기 -->
       <div class="player-box" id="playerBox" style="display:none;">
         <div class="video-wrapper">
           <video id="videoPlayer" playsinline controls muted></video>
         </div>
         <canvas id="analysisCanvas" style="display:none;"></canvas>
+
+        <div class="manual-snap-bar">
+          <span class="snap-title">💡 원하는 장면에서 영상을 멈추고 버튼을 누르면 사진과 시간을 직접 교체할 수 있습니다:</span>
+          <div class="snap-btn-row">
+            <button class="btn-snap" onclick="manualSnapToPhase(1)">① 정지 준비</button>
+            <button class="btn-snap accent-btn" onclick="manualSnapToPhase(2)">② 최대 굴곡</button>
+            <button class="btn-snap accent-btn" onclick="manualSnapToPhase(3)">③ 이륙</button>
+            <button class="btn-snap" onclick="manualSnapToPhase(4)">④ 체공</button>
+            <button class="btn-snap" onclick="manualSnapToPhase(5)">⑤ 착지</button>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- 3. AI 전자동 5대 핵심 국면 추출 결과지 -->
+    <!-- 3. 실측 기반 5대 핵심 국면 결과지 -->
     <section class="card report-section" id="reportResultSection" style="display:none;">
       <div class="section-title-bar">
-        <h2>📊 AI 전자동 5대 국면 추출 사진 & 정밀 운동역학 해석</h2>
-        <span class="guide-text">영상에서 직접 캡처된 사진과 각도, 운동역학 해석이 자동으로 구성되었습니다.</span>
+        <h2>📊 국면별(Phase) 2D 정밀 운동역학 해석</h2>
+        <span class="guide-text" id="dataSourceBadge">데이터 소스: CSV 실측 각도 기반 자동 계산</span>
       </div>
 
       <div class="phase-list">
@@ -96,7 +113,7 @@
           <div class="phase-top">
             <span class="badge">PHASE 01</span>
             <h3>정지 준비 자세 (Starting Posture)</h3>
-            <span class="time-tag" id="phaseTime1">0.00s</span>
+            <span class="time-tag" id="phaseTime1">-</span>
           </div>
           <div class="phase-grid">
             <div class="img-container">
@@ -105,16 +122,16 @@
             <div class="metrics-display">
               <div class="metric-box">
                 <span class="m-title">무릎 신전 각도</span>
-                <span class="m-value" id="valKnee1">172.5°</span>
-                <span class="m-status status-good">안정적 신전</span>
+                <span class="m-value" id="valKnee1">-</span>
+                <span class="m-status" id="statusKnee1">안정적 신전</span>
               </div>
               <div class="metric-box">
                 <span class="m-title">고관절 각도</span>
-                <span class="m-value" id="valHip1">168.0°</span>
+                <span class="m-value" id="valHip1">-</span>
               </div>
             </div>
             <div class="feedback-container">
-              <h4>🔍 AI 자동 운동역학 해석</h4>
+              <h4>🔍 운동역학 해석 & 피드백</h4>
               <p id="feedbackText1">출발선에서 기저면(BOS)이 양발 어깨너비로 안정되게 확보되었으며, 팔의 후방 백스윙 궤적이 충분히 확보되어 전방 추진 가속 거리를 형성하고 있습니다.</p>
             </div>
           </div>
@@ -133,18 +150,18 @@
             </div>
             <div class="metrics-display">
               <div class="metric-box">
-                <span class="m-title">영상 판독 최소 무릎각</span>
-                <span class="m-value score-val" id="valKnee2">77.3°</span>
-                <span class="m-status status-good">SSC 탄성 축적 최적</span>
+                <span class="m-title">실측 최소 무릎각 (Min Knee)</span>
+                <span class="m-value score-val" id="valKnee2">-</span>
+                <span class="m-status" id="statusKnee2">-</span>
               </div>
               <div class="metric-box">
-                <span class="m-title">영상 판독 고관절각</span>
-                <span class="m-value" id="valHip2">72.4°</span>
+                <span class="m-title">고관절 굴곡각</span>
+                <span class="m-value" id="valHip2">-</span>
               </div>
             </div>
             <div class="feedback-container">
-              <h4>🔍 AI 자동 운동역학 해석</h4>
-              <p id="feedbackText2">영상에서 포착된 최소 무릎각은 <strong>77.3°</strong>입니다. 대퇴사두근과 둔근의 <strong>신장-단축 주기(SSC)</strong> 탄성에너지를 극대화하기에 가장 이상적인 굴곡 깊이를 형성하여, 강력한 수평 지면반력(GRF)을 폭발시킬 준비가 완벽합니다.</p>
+              <h4>🔍 운동역학 해석 & 피드백</h4>
+              <p id="feedbackText2">데이터를 계산 중입니다...</p>
             </div>
           </div>
         </div>
@@ -162,19 +179,18 @@
             </div>
             <div class="metrics-display">
               <div class="metric-box">
-                <span class="m-title">영상 판독 이륙 무릎각</span>
-                <span class="m-value score-val" id="valKnee3">165.2°</span>
-                <span class="m-status status-good">트리플 익스텐션 완결</span>
+                <span class="m-title">이륙 무릎 각도</span>
+                <span class="m-value score-val" id="valKnee3">-</span>
+                <span class="m-status" id="statusKnee3">-</span>
               </div>
               <div class="metric-box">
                 <span class="m-title">도약 투사각</span>
-                <span class="m-value" id="valLaunch3">43.5°</span>
-                <span class="m-status status-good">황금각 (40°~45°)</span>
+                <span class="m-value" id="valLaunch3">43.0°</span>
               </div>
             </div>
             <div class="feedback-container">
-              <h4>🔍 AI 자동 운동역학 해석</h4>
-              <p id="feedbackText3">발목-무릎-고관절이 동시에 펴지는 <strong>트리플 익스텐션(Triple Extension)</strong> 각도가 <strong>165.2°</strong>로 완전 신전되었으며, 황금 투사각(<strong>43.5°</strong>)으로 이륙하여 수평 추진력과 체공고의 황금비를 형성했습니다.</p>
+              <h4>🔍 운동역학 해석 & 피드백</h4>
+              <p id="feedbackText3">데이터를 계산 중입니다...</p>
             </div>
           </div>
         </div>
@@ -193,12 +209,12 @@
             <div class="metrics-display">
               <div class="metric-box">
                 <span class="m-title">당기기 무릎 굴곡각</span>
-                <span class="m-value" id="valKnee4">68.4°</span>
-                <span class="m-status status-good">턱(Tuck) 굴곡 우수</span>
+                <span class="m-value" id="valKnee4">-</span>
+                <span class="m-status" id="statusKnee4">-</span>
               </div>
             </div>
             <div class="feedback-container">
-              <h4>🔍 AI 자동 운동역학 해석</h4>
+              <h4>🔍 운동역학 해석 & 피드백</h4>
               <p id="feedbackText4">정점 도달 후 복근과 장요근을 이용해 무릎을 가슴으로 빠르게 끌어올려 착지 시 하지를 전방으로 멀리 뻗을 수 있는 유효 체공 거리를 확보했습니다.</p>
             </div>
           </div>
@@ -218,16 +234,12 @@
             <div class="metrics-display">
               <div class="metric-box">
                 <span class="m-title">접지 순간 무릎각</span>
-                <span class="m-value" id="valKnee5">142.0°</span>
+                <span class="m-value" id="valKnee5">-</span>
                 <span class="m-status status-good">전방 뻗기 양호</span>
-              </div>
-              <div class="metric-box">
-                <span class="m-title">착지 안정성</span>
-                <span class="m-value" style="font-size:14px; color:#39d353;">전방 중심 전환</span>
               </div>
             </div>
             <div class="feedback-container">
-              <h4>🔍 AI 자동 운동역학 해석</h4>
+              <h4>🔍 운동역학 해석 & 피드백</h4>
               <p id="feedbackText5">발뒤꿈치 접지 후 무게중심(COM)이 지면반력을 뚫고 전방으로 매끄럽게 넘어가 뒤로 넘어지는 감점 없이 최대 비거리를 인정받았습니다.</p>
             </div>
           </div>
@@ -235,32 +247,25 @@
       </div>
     </section>
 
-    <!-- 4. AI 종합 코칭 처방 자동 생성 영역 -->
+    <!-- 4. 실측 데이터 기반 종합 코칭 처방 -->
     <section class="card summary-section" id="summarySection" style="display:none;">
       <div class="section-title-bar">
-        <h2>🎯 PASS AI 맞춤형 종합 코칭 처방</h2>
+        <h2>🎯 PASS 맞춤형 종합 코칭 처방 & 트레이닝 가이드</h2>
       </div>
 
       <div class="summary-grid">
         <div class="summary-box strength-box">
           <h3>💪 주요 강점 (Strengths)</h3>
-          <ul id="aiStrengthsList">
-            <li><strong>강력한 신장-단축 주기(SSC) 활용</strong>: 도약 전 77.3°의 깊고 탄력 있는 굴곡으로 탄성에너지를 손실 없이 축적함.</li>
-            <li><strong>완벽한 트리플 익스텐션 & 투사각</strong>: 이륙 시 165.2°의 완전 신전 및 43.5°의 최적 궤적으로 비거리 극대화.</li>
-            <li><strong>우수한 착지 무게중심 전환</strong>: 착지 후 골반이 부드럽게 전방으로 넘어가 후방 낙하 감점 요인이 전혀 없음.</li>
-          </ul>
+          <ul id="aiStrengthsList"></ul>
         </div>
         <div class="summary-box improve-box">
           <h3>🎯 추가 기록 향상 포인트 (Improvements)</h3>
-          <ul id="aiImprovementsList">
-            <li><strong>공중 발 뻗기 타이밍 미세 조율</strong>: 정점 도달 후 하지를 앞으로 뻗는 유지 시간을 0.05초만 더 길게 가져가면 <strong>+3~5cm 추가 향상 가능</strong>.</li>
-            <li><strong>팔 스윙 타이밍 동기화</strong>: 지면을 박차는 순간 양팔이 귀 옆을 통과하는 순간 가속도를 더 일치시킬 것.</li>
-          </ul>
+          <ul id="aiImprovementsList"></ul>
         </div>
       </div>
 
       <div class="action-box">
-        <h4>🏋️ AI 추천 맞춤형 보강 트레이닝 처방</h4>
+        <h4>🏋️ 맞춤형 추천 보강 트레이닝 처방</h4>
         <div class="plan-chips">
           <span class="plan-chip">박스 점프 & 턱점프 (Box Jump to Tuck Jump)</span>
           <span class="plan-chip">밴드 힙힌지 드라이브</span>

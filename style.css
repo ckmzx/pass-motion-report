@@ -142,23 +142,47 @@ input[type="text"], input[type="number"], input[type="date"] {
   outline: none;
 }
 
-.drop-area {
+/* 듀얼 업로드 그리드 */
+.upload-dual-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .upload-dual-grid { grid-template-columns: 1fr; }
+}
+
+.drop-box {
   border: 2px dashed var(--card-border);
   border-radius: var(--radius);
-  padding: 32px;
+  padding: 24px;
   text-align: center;
   cursor: pointer;
   background: rgba(255, 255, 255, 0.01);
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   transition: all 0.2s;
 }
 
-.drop-area:hover {
+.drop-box:hover {
   border-color: var(--primary);
   background: rgba(88, 166, 255, 0.03);
 }
 
-.drop-area input[type="file"] {
+.drop-box.csv-box {
+  border-color: rgba(57, 211, 83, 0.4);
+}
+
+.drop-box.csv-box:hover {
+  border-color: var(--accent-green);
+  background: rgba(57, 211, 83, 0.03);
+}
+
+.drop-box input[type="file"] {
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
   opacity: 0;
@@ -166,55 +190,29 @@ input[type="text"], input[type="number"], input[type="date"] {
   z-index: 10;
 }
 
-.drop-message .icon {
-  font-size: 36px;
-  display: block;
-  margin-bottom: 8px;
+.drop-box .icon { font-size: 30px; }
+.drop-box strong { font-size: 14px; color: #fff; }
+.drop-box .sub { font-size: 12px; color: var(--text-muted); }
+
+.badge-rec {
+  background: var(--accent-green);
+  color: #000;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
 }
 
-.drop-message strong {
-  font-size: 15px;
-  display: block;
-  color: #fff;
-}
-
-.drop-message .sub {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 6px;
-  display: block;
-}
-
-/* 진행률 바 */
-.progress-container {
-  margin-top: 16px;
-  background: rgba(0, 0, 0, 0.3);
-  padding: 16px;
-  border-radius: var(--radius);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.progress-bar-bg {
-  width: 100%;
-  height: 12px;
-  background: #21262d;
+.status-alert-bar {
+  margin-top: 14px;
+  background: rgba(88, 166, 255, 0.1);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  padding: 10px 16px;
   border-radius: 6px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  width: 0%;
-  height: 100%;
-  background: linear-gradient(90deg, #58a6ff, #39d353);
-  transition: width 0.3s;
-}
-
-.progress-text {
   font-size: 13px;
-  font-weight: 600;
   color: var(--primary);
+  font-weight: 600;
 }
 
 .player-box {
@@ -234,6 +232,43 @@ input[type="text"], input[type="number"], input[type="date"] {
   width: 100%;
   max-height: 480px;
 }
+
+.manual-snap-bar {
+  margin-top: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.snap-title {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.snap-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-snap {
+  background: #21262d;
+  color: #fff;
+  border: 1px solid var(--card-border);
+  padding: 5px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-snap:hover { background: var(--primary); }
+.btn-snap.accent-btn { border-color: var(--accent-green); color: var(--accent-green); }
+.btn-snap.accent-btn:hover { background: var(--accent-green); color: #000; }
 
 /* 국면 리스트 */
 .phase-list {
@@ -291,7 +326,7 @@ input[type="text"], input[type="number"], input[type="date"] {
 
 .phase-grid {
   display: grid;
-  grid-template-columns: 320px 180px 1fr;
+  grid-template-columns: 320px 200px 1fr;
   gap: 18px;
   padding: 18px;
   align-items: start;
@@ -359,6 +394,7 @@ input[type="text"], input[type="number"], input[type="date"] {
 }
 
 .status-good { background: rgba(57, 211, 83, 0.15); color: var(--accent-green); }
+.status-warn { background: rgba(241, 224, 90, 0.15); color: var(--accent-gold); }
 
 .feedback-container {
   background: rgba(255, 255, 255, 0.02);
@@ -472,10 +508,9 @@ input[type="text"], input[type="number"], input[type="date"] {
   margin-top: 30px;
 }
 
-/* 인쇄 */
 @media print {
   body { background: #fff; color: #000; padding: 0; }
   .header, .card { background: #fff; color: #000; border-color: #ddd; box-shadow: none; padding: 10px 0; }
-  .drop-area, .progress-container, .player-box, .action-footer { display: none !important; }
+  .upload-dual-grid, .status-alert-bar, .player-box, .action-footer { display: none !important; }
   .img-container { height: 140px; }
 }
