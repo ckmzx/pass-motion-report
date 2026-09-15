@@ -54,7 +54,7 @@
     <section class="card video-section">
       <div class="section-title-bar">
         <h2>🎬 분석 영상(MP4) 및 데이터(CSV) 로드</h2>
-        <span class="guide-text">CSV를 올리면 영상의 실제 프레임별 각도를 100% 실측값으로 정밀 계산합니다.</span>
+        <span class="guide-text">분석된 영상과 CSV를 올리면 학생 고유의 실측 각도와 역학 리포트가 완성됩니다.</span>
       </div>
 
       <div class="upload-dual-grid">
@@ -66,7 +66,7 @@
           <span class="sub" id="loadedVideoName">영상 파일을 드래그하거나 클릭하세요</span>
         </div>
 
-        <!-- 2) CSV 업로드 박스 (강력 권장) -->
+        <!-- 2) CSV 업로드 박스 -->
         <div class="drop-box csv-box" id="dropZoneCsv">
           <input type="file" id="csvFileInput" accept=".csv,text/csv">
           <span class="icon">📊</span>
@@ -80,7 +80,7 @@
         <span id="statusAlertText">데이터를 로드하는 중입니다...</span>
       </div>
 
-      <!-- 비디오 뷰어 & 프레임 탐색기 -->
+      <!-- 비디오 뷰어 -->
       <div class="player-box" id="playerBox" style="display:none;">
         <div class="video-wrapper">
           <video id="videoPlayer" playsinline controls muted></video>
